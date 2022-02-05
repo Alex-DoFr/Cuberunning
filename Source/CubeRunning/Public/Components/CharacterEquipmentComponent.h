@@ -16,15 +16,20 @@ class CUBERUNNING_API UCharacterEquipmentComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UCharacterEquipmentComponent();
-
+	
+	ABaseWeapon* GetEquippedWeapon()const {return EquipWeapon;}
+	
 protected:
 	UPROPERTY()
 	ABaseWeapon* EquipWeapon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Loadout ")
 	TSubclassOf<ABaseWeapon> LoadoutWeapon;
-	
+
+	TWeakObjectPtr<class ACubeRunningCharacter> CachedCharacterOwner;
 	
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	void CreateLodout();
 };

@@ -20,6 +20,6 @@ public:
 	void Shoot(FVector Start, FVector Direction, AController* Controller);
 	
 protected:
-	float FireRange = 500000.0f;
+	float FireRange = 999999.0f;
 	float DamageAmount = 1.0f;
 };

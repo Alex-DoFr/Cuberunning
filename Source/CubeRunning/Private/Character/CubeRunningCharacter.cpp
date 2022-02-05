@@ -39,15 +39,8 @@ ACubeRunningCharacter::ACubeRunningCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
-
-
-	// Create VR Controllers.
-	R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
-	R_MotionController->MotionSource = FXRMotionControllerBase::RightHandSourceId;
-	R_MotionController->SetupAttachment(RootComponent);
-	L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
-	L_MotionController->SetupAttachment(RootComponent);
-
+	
+	EquipmentComponent = CreateDefaultSubobject<UCharacterEquipmentComponent>(TEXT("EquipmentComponent"));
 }
 
 void ACubeRunningCharacter::BeginPlay()
@@ -79,7 +72,7 @@ void ACubeRunningCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	// Bind fire event
-	//PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACubeRunningCharacter::OnFire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACubeRunningCharacter::OnUseWeapon);
 	
 
 	// Bind movement events
@@ -94,7 +87,15 @@ void ACubeRunningCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ACubeRunningCharacter::LookUpAtRate);
 }
-	
+
+void ACubeRunningCharacter::OnUseWeapon()
+{
+	if(EquipmentComponent)
+	{
+		EquipmentComponent->GetEquippedWeapon()->Use();
+	}
+}
+
 void ACubeRunningCharacter::MoveForward(float Value)
 {
 	if (Value != 0.0f)

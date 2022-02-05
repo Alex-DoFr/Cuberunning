@@ -3,6 +3,8 @@
 
 #include "Equipment/ShootingWeapon.h"
 
+#include "Character/CubeRunningCharacter.h"
+
 AShootingWeapon::AShootingWeapon()
 {
 	Barrel = CreateDefaultSubobject<UBarrelComponent>(TEXT("BarrelCpmponent"));
@@ -13,9 +15,22 @@ void AShootingWeapon::Use()
 {
 	Super::Use();
 
-	if(CheckCanUse())
+	if(!CachedCharacterOwner.IsValid())
 	{
-		//Barrel->Shoot();
+		return;
 	}
 	
+	if(CheckCanUse())
+	{
+		AController* Controller = CachedCharacterOwner->GetController();
+		FVector ShootStatr;
+		FRotator ShootRotation;
+		FVector ShootDirecrion;
+
+		Controller->GetPlayerViewPoint(ShootStatr,ShootRotation);
+
+		ShootDirecrion = ShootRotation.RotateVector(FVector::ForwardVector);
+	
+		Barrel->Shoot(ShootStatr,ShootDirecrion,Controller);
+	}
 }

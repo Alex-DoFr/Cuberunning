@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/CharacterEquipmentComponent.h"
 #include "GameFramework/Character.h"
 #include "CubeRunningCharacter.generated.h"
 
@@ -27,13 +28,8 @@ class ACubeRunningCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	/** Motion controller (right hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UMotionControllerComponent* R_MotionController;
-
-	/** Motion controller (left hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UMotionControllerComponent* L_MotionController;
+	UPROPERTY(VisibleAnywhere, Category = "EqipmantComponent")
+	UCharacterEquipmentComponent* EquipmentComponent;
 
 public:
 	ACubeRunningCharacter();
@@ -55,7 +51,7 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 protected:
-	
+	void OnUseWeapon();
 	
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);

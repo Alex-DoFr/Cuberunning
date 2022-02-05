@@ -19,6 +19,7 @@ public:
 
 	void Use() override;
 protected:
+	UPROPERTY(VisibleDefaultsOnly,BlueprintReadOnly, Category="WeaponComponents")
 	UBarrelComponent* Barrel;
 
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="SocketName")
