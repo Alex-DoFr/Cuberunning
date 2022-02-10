@@ -6,10 +6,9 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
-#include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -46,16 +45,19 @@ ACubeRunningCharacter::ACubeRunningCharacter()
 void ACubeRunningCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	Mesh1P->SetHiddenInGame(false, true);
 
-		// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
-		if (bUsingMotionControllers)
-		{
-			Mesh1P->SetHiddenInGame(true, true);
-		}
-		else
-		{
-			Mesh1P->SetHiddenInGame(false, true);
-		}
+	GetCapsuleComponent()->OnComponentHit.AddDynamic(this,&ACubeRunningCharacter::OnplayerCapsulHit);
+
+	GetCharacterMovement()->SetPlaneConstraintEnabled(true);
+
+	if(IsValid(CameraTiltCurve))
+	{
+		FOnTimelineFloat TimelineCallBack;
+		TimelineCallBack.BindUFunction(this,FName("UpdateCameraTilt"));
+		CameraTilTimeline.AddInterpFloat(CameraTiltCurve, TimelineCallBack);
+	}
 }
 
 	
@@ -88,6 +90,184 @@ void ACubeRunningCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ACubeRunningCharacter::LookUpAtRate);
 }
 
+void ACubeRunningCharacter::GetWallRunSideAndDirection(const FVector HitNormal, EWallRunSide& OutSide, FVector& OutDirection) const
+{
+	if(FVector::DotProduct(HitNormal,GetActorRightVector())>0)
+	{
+		OutSide = EWallRunSide::Left;
+		OutDirection = FVector::CrossProduct(HitNormal,FVector::UpVector).GetSafeNormal();
+	}
+	else
+	{
+		OutSide = EWallRunSide::Right;
+		OutDirection = FVector::CrossProduct(FVector::UpVector,HitNormal).GetSafeNormal();
+	}
+}
+
+void ACubeRunningCharacter::OnplayerCapsulHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if(bIsWallRoning)
+	{
+		return;
+	}
+	
+	FVector HitNormal = Hit.ImpactNormal;
+	if(!IsSurfaceWallRunnable(HitNormal))
+	{
+		GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!IsSurfaceWallRunnable = true");
+		return;
+	}
+
+	//if(GetCharacterMovement()->IsFalling())
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"Character not falling");
+	//	return;
+	//}
+	
+	EWallRunSide Side = EWallRunSide::None;
+	FVector Direction = FVector::ZeroVector;
+	GetWallRunSideAndDirection(HitNormal, Side, Direction);
+
+	if(!AreRequiredKeysDown(Side))
+	{
+		GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!AreRequiredKeysDown = true");
+		return;
+	}
+
+	GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"We can runing on wall");
+	StartWallRun(Side,Direction);
+}
+
+bool ACubeRunningCharacter::IsSurfaceWallRunnable(const FVector& SurfaceNormal) const
+{
+	return SurfaceNormal.Z < GetCharacterMovement()->GetWalkableFloorZ() && SurfaceNormal.Z>-0.005f;
+
+	/*if(SurfaceNormal.Z > GetCharacterMovement()->GetWalkableFloorZ()|| SurfaceNormal.Z<-0.005f)
+	{
+		return false;
+	}
+	return true;*/
+}
+
+bool ACubeRunningCharacter::AreRequiredKeysDown(EWallRunSide Side) const
+{
+	if(ForwardAxis < 0.1f)
+	{
+		return false;
+	}
+	if(Side==EWallRunSide::Right && RightAxis <- 0.1f)
+	{
+		return false;
+	}
+	if(Side==EWallRunSide::Left && RightAxis > 0.1f)
+	{
+		return false;
+	}
+	return true;
+}
+
+void ACubeRunningCharacter::StartWallRun(EWallRunSide Side, const FVector& Direction)
+{
+	BeginCameraTilt();
+	bIsWallRoning = true;
+	
+	CurrentWalRunSide = Side;
+	CurrentWallRunDirection = Direction;
+	
+	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::UpVector);
+}
+
+void ACubeRunningCharacter::StopWallRun()
+{
+	EndCameraTilt();
+	bIsWallRoning = false;
+	//CurrentWalRunSide = EWallRunSide::None;
+	//CurrentWallRunDirection = FVector::ZeroVector;
+	
+	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
+}
+
+void ACubeRunningCharacter::UpdatrWallRun()
+{
+	if(!AreRequiredKeysDown(CurrentWalRunSide))
+	{
+		StopWallRun();
+		return;
+	}
+	
+	FHitResult HitResult;
+	
+	FVector Start = GetActorLocation();
+	FVector LTDirectional = CurrentWalRunSide==EWallRunSide::Right ? GetActorRightVector():-GetActorRightVector();
+	float LTLenght = 200.0f;
+	FVector End = Start+LTLenght*LTDirectional;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	
+	if(GetWorld()->LineTraceSingleByChannel(HitResult,Start,End,ECC_Visibility,QueryParams))
+	{
+		EWallRunSide Side = EWallRunSide::None;
+		FVector Direction = FVector::ZeroVector;
+		GetWallRunSideAndDirection(HitResult.ImpactNormal, Side, Direction);
+
+		if(Side!= CurrentWalRunSide)
+		{
+			StopWallRun();
+		}
+		else
+		{
+			CurrentWallRunDirection = Direction;
+			GetCharacterMovement()->Velocity = GetCharacterMovement()->GetMaxSpeed()*CurrentWallRunDirection;
+		}
+	}
+	else
+	{
+		StopWallRun();
+	}
+}
+
+void ACubeRunningCharacter::UpdateCameraTilt(float Value)
+{
+	FRotator CurrentControlRotation = GetControlRotation();
+	CurrentControlRotation.Roll = CurrentWalRunSide == EWallRunSide::Left? Value:-Value;
+	GetController()->SetControlRotation(CurrentControlRotation);
+}
+
+void ACubeRunningCharacter::Jump()
+{
+	if(bIsWallRoning)
+	{
+		FVector JumpDirection = FVector::ZeroVector;
+		if(CurrentWalRunSide==EWallRunSide::Right)
+		{
+			JumpDirection = FVector::CrossProduct(CurrentWallRunDirection,FVector::UpVector).GetSafeNormal();
+		}
+		else
+		{
+			JumpDirection = FVector::CrossProduct(FVector::UpVector,CurrentWallRunDirection).GetSafeNormal();
+		}
+
+		JumpDirection += FVector::UpVector;
+		LaunchCharacter(GetCharacterMovement()->JumpZVelocity* JumpDirection.GetSafeNormal(),false,true);
+		StopWallRun();
+	}
+	else
+	{
+		Super::Jump();
+	}
+}
+
+void ACubeRunningCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	if(bIsWallRoning)
+	{
+		UpdatrWallRun();
+	}
+	CameraTilTimeline.TickTimeline(DeltaSeconds);
+}
+
 void ACubeRunningCharacter::OnUseWeapon()
 {
 	if(EquipmentComponent)
@@ -98,18 +278,18 @@ void ACubeRunningCharacter::OnUseWeapon()
 
 void ACubeRunningCharacter::MoveForward(float Value)
 {
+	ForwardAxis = Value;
 	if (Value != 0.0f)
 	{
-		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
 void ACubeRunningCharacter::MoveRight(float Value)
 {
+	RightAxis = Value;
 	if (Value != 0.0f)
 	{
-		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
 }

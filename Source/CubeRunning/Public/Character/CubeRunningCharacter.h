@@ -4,16 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Components/CharacterEquipmentComponent.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CubeRunningCharacter.generated.h"
 
-class UInputComponent;
 class USkeletalMeshComponent;
-class USceneComponent;
 class UCameraComponent;
-class UMotionControllerComponent;
-class UAnimMontage;
-class USoundBase;
+
+UENUM()
+enum class EWallRunSide : uint8
+{
+	None,
+	Left,
+	Right
+};
 
 UCLASS(config=Game)
 class ACubeRunningCharacter : public ACharacter
@@ -31,11 +35,18 @@ class ACubeRunningCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, Category = "EqipmantComponent")
 	UCharacterEquipmentComponent* EquipmentComponent;
 
-public:
-	ACubeRunningCharacter();
+	float ForwardAxis = 0.0f;
+	float RightAxis = 0.0f;
 
 protected:
-	virtual void BeginPlay();
+	bool bIsWallRoning = false;
+	EWallRunSide CurrentWalRunSide = EWallRunSide::None;
+	FVector CurrentWallRunDirection = FVector::ZeroVector;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="WallRun")
+	UCurveFloat* CameraTiltCurve;
+
+	FTimeline CameraTilTimeline;
 
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
@@ -51,6 +62,8 @@ public:
 	uint8 bUsingMotionControllers : 1;
 
 protected:
+	virtual void BeginPlay();
+	
 	void OnUseWeapon();
 	
 	/** Handles moving forward/backward */
@@ -70,25 +83,36 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void LookUpAtRate(float Rate);
-
 	
-protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
+	void GetWallRunSideAndDirection(const FVector HitNormal, EWallRunSide& OutSide, FVector& OutDirection) const;
 
-	/* 
-	 * Configures input for touchscreen devices if there is a valid touch interface for doing so 
-	 *
-	 * @param	InputComponent	The input component pointer to bind controls to
-	 * @returns true if touch controls were enabled.
-	 */
+	UFUNCTION()
+	void OnplayerCapsulHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal) const;
+
+	bool AreRequiredKeysDown(EWallRunSide Side) const;
+
+	void StartWallRun(EWallRunSide Side, const FVector& Direction);
+	void StopWallRun();
+	void UpdatrWallRun();
+
+	FORCEINLINE void BeginCameraTilt() {CameraTilTimeline.Play();}
+	UFUNCTION()
+	void UpdateCameraTilt(float Value);
+	FORCEINLINE void EndCameraTilt() {CameraTilTimeline.Reverse();}
 public:
+	ACubeRunningCharacter();
+
 	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	virtual void Jump() override;
+
+	virtual void Tick(float DeltaSeconds) override;
 };
 
