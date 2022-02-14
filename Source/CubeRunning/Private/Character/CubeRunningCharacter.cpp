@@ -40,6 +40,8 @@ ACubeRunningCharacter::ACubeRunningCharacter()
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 	
 	EquipmentComponent = CreateDefaultSubobject<UCharacterEquipmentComponent>(TEXT("EquipmentComponent"));
+
+	HealthComponent = CreateDefaultSubobject<UCharacterHealthComponent>(TEXT("HealthComponent"));
 }
 
 void ACubeRunningCharacter::BeginPlay()
@@ -114,7 +116,7 @@ void ACubeRunningCharacter::OnplayerCapsulHit(UPrimitiveComponent* HitComponent,
 	FVector HitNormal = Hit.ImpactNormal;
 	if(!IsSurfaceWallRunnable(HitNormal))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!IsSurfaceWallRunnable = true");
+		//GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!IsSurfaceWallRunnable = true");
 		return;
 	}
 
@@ -130,11 +132,11 @@ void ACubeRunningCharacter::OnplayerCapsulHit(UPrimitiveComponent* HitComponent,
 
 	if(!AreRequiredKeysDown(Side))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!AreRequiredKeysDown = true");
+		//GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!AreRequiredKeysDown = true");
 		return;
 	}
 
-	GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"We can runing on wall");
+	//GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"We can runing on wall");
 	StartWallRun(Side,Direction);
 }
 

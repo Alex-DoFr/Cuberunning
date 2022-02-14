@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/CharacterEquipmentComponent.h"
+#include "Components/CharacterHealthComponent.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CubeRunningCharacter.generated.h"
@@ -34,6 +35,9 @@ class ACubeRunningCharacter : public ACharacter
 
 	UPROPERTY(VisibleAnywhere, Category = "EqipmantComponent")
 	UCharacterEquipmentComponent* EquipmentComponent;
+	
+	UPROPERTY(VisibleAnywhere, Category = "HealthComponent")
+	UCharacterHealthComponent* HealthComponent; 
 
 	float ForwardAxis = 0.0f;
 	float RightAxis = 0.0f;
