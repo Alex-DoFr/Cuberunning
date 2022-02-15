@@ -11,6 +11,7 @@ class ACubeRunningGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+	
 public:
 	ACubeRunningGameMode();
 };

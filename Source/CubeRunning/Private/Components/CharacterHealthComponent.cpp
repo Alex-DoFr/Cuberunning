@@ -28,7 +28,6 @@ void UCharacterHealthComponent::OnTakeAnyDamage(AActor* DamagedActor, float Dama
 	{
 		return;
 	}
-	
 	Death();
 }
 
@@ -37,7 +36,7 @@ void UCharacterHealthComponent::Death()
 	bIsDeath = true;
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	CachedCharacterOwner->DisableInput(PlayerController);
-	PlayerController->PlayerCameraManager->StartCameraFade(0.0f,1.0f,1.5f,FLinearColor::Black,false, true);
+	PlayerController->PlayerCameraManager->StartCameraFade(0.0f,1.0f,TimeCameraFade,FLinearColor::Black,false, true);
 	GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle,this,&UCharacterHealthComponent::Respawn,3.0f);
 }
 
@@ -54,12 +53,11 @@ void UCharacterHealthComponent::Respawn()
 	
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	CachedCharacterOwner->EnableInput(PlayerController);
-	PlayerController->PlayerCameraManager->StartCameraFade(1.0f,0.0f,1.5f,FLinearColor::Black,false, false);
+	PlayerController->PlayerCameraManager->StartCameraFade(1.0f,0.0f,TimeCameraUnfade,FLinearColor::Black,false, false);
 }
 
 void UCharacterHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 }
 

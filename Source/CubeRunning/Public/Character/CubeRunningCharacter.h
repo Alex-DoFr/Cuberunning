@@ -25,6 +25,7 @@ class ACubeRunningCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+	
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
@@ -39,17 +40,26 @@ class ACubeRunningCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, Category = "HealthComponent")
 	UCharacterHealthComponent* HealthComponent; 
 
+	// Stores information about MoveForward Value
 	float ForwardAxis = 0.0f;
+	
+	// Stores information about MoveRight Value
 	float RightAxis = 0.0f;
 
 protected:
 	bool bIsWallRoning = false;
-	EWallRunSide CurrentWalRunSide = EWallRunSide::None;
-	FVector CurrentWallRunDirection = FVector::ZeroVector;
 	
+	// Stores information about which side of the wall the player is running on
+	EWallRunSide CurrentWalRunSide = EWallRunSide::None;
+	
+	// Stores information about which direction the player is running in
+	FVector CurrentWallRunDirection = FVector::ZeroVector;
+
+	// The curve that determines at what speed and by what degree the camera deviates when running along the wall
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="WallRun")
 	UCurveFloat* CameraTiltCurve;
 
+	// Timeline of camera deflection when running on the wall
 	FTimeline CameraTilTimeline;
 
 public:
@@ -68,7 +78,7 @@ public:
 protected:
 	virtual void BeginPlay();
 	
-	void OnUseWeapon();
+	void UseWeapon();
 	
 	/** Handles moving forward/backward */
 	void MoveForward(float Val);
@@ -90,22 +100,30 @@ protected:
 	
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+	
 	void GetWallRunSideAndDirection(const FVector HitNormal, EWallRunSide& OutSide, FVector& OutDirection) const;
 
+	//It is called when the capsule comes into contact with a surface and if this surface satisfies the conditions of running along the walls, the character starts running
 	UFUNCTION()
 	void OnplayerCapsulHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+	
 	bool IsSurfaceWallRunnable(const FVector& SurfaceNormal) const;
 
+	//checks whether the character is moving forward and not trying to strafe in the opposite direction from the wall
 	bool AreRequiredKeysDown(EWallRunSide Side) const;
-
+	
 	void StartWallRun(EWallRunSide Side, const FVector& Direction);
+	
 	void StopWallRun();
-	void UpdatrWallRun();
 
+	// Checks every frame whether the character is running on the wall
+	void UpdatrWallRun();
+	
 	FORCEINLINE void BeginCameraTilt() {CameraTilTimeline.Play();}
+	
 	UFUNCTION()
 	void UpdateCameraTilt(float Value);
+	
 	FORCEINLINE void EndCameraTilt() {CameraTilTimeline.Reverse();}
 public:
 	ACubeRunningCharacter();

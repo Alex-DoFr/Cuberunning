@@ -76,7 +76,7 @@ void ACubeRunningCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	// Bind fire event
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACubeRunningCharacter::OnUseWeapon);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACubeRunningCharacter::UseWeapon);
 	
 
 	// Bind movement events
@@ -119,12 +119,6 @@ void ACubeRunningCharacter::OnplayerCapsulHit(UPrimitiveComponent* HitComponent,
 		//GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"!IsSurfaceWallRunnable = true");
 		return;
 	}
-
-	//if(GetCharacterMovement()->IsFalling())
-	//{
-	//	GEngine->AddOnScreenDebugMessage(-1,2,FColor::Red,"Character not falling");
-	//	return;
-	//}
 	
 	EWallRunSide Side = EWallRunSide::None;
 	FVector Direction = FVector::ZeroVector;
@@ -143,12 +137,6 @@ void ACubeRunningCharacter::OnplayerCapsulHit(UPrimitiveComponent* HitComponent,
 bool ACubeRunningCharacter::IsSurfaceWallRunnable(const FVector& SurfaceNormal) const
 {
 	return SurfaceNormal.Z < GetCharacterMovement()->GetWalkableFloorZ() && SurfaceNormal.Z>-0.005f;
-
-	/*if(SurfaceNormal.Z > GetCharacterMovement()->GetWalkableFloorZ()|| SurfaceNormal.Z<-0.005f)
-	{
-		return false;
-	}
-	return true;*/
 }
 
 bool ACubeRunningCharacter::AreRequiredKeysDown(EWallRunSide Side) const
@@ -183,9 +171,6 @@ void ACubeRunningCharacter::StopWallRun()
 {
 	EndCameraTilt();
 	bIsWallRoning = false;
-	//CurrentWalRunSide = EWallRunSide::None;
-	//CurrentWallRunDirection = FVector::ZeroVector;
-	
 	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
 }
 
@@ -198,7 +183,6 @@ void ACubeRunningCharacter::UpdatrWallRun()
 	}
 	
 	FHitResult HitResult;
-	
 	FVector Start = GetActorLocation();
 	FVector LTDirectional = CurrentWalRunSide==EWallRunSide::Right ? GetActorRightVector():-GetActorRightVector();
 	float LTLenght = 200.0f;
@@ -249,7 +233,6 @@ void ACubeRunningCharacter::Jump()
 		{
 			JumpDirection = FVector::CrossProduct(FVector::UpVector,CurrentWallRunDirection).GetSafeNormal();
 		}
-
 		JumpDirection += FVector::UpVector;
 		LaunchCharacter(GetCharacterMovement()->JumpZVelocity* JumpDirection.GetSafeNormal(),false,true);
 		StopWallRun();
@@ -270,7 +253,7 @@ void ACubeRunningCharacter::Tick(float DeltaSeconds)
 	CameraTilTimeline.TickTimeline(DeltaSeconds);
 }
 
-void ACubeRunningCharacter::OnUseWeapon()
+void ACubeRunningCharacter::UseWeapon()
 {
 	if(EquipmentComponent)
 	{

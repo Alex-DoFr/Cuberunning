@@ -11,6 +11,7 @@ class ACubeRunningHUD : public AHUD
 {
 	GENERATED_BODY()
 
+	
 public:
 	ACubeRunningHUD();
 

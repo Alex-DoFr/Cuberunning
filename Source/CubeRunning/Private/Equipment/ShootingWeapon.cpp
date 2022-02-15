@@ -2,7 +2,6 @@
 
 
 #include "Equipment/ShootingWeapon.h"
-
 #include "Character/CubeRunningCharacter.h"
 
 AShootingWeapon::AShootingWeapon()
