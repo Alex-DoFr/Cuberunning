@@ -3,6 +3,7 @@
 
 #include "Equipment/Components/BarrelComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UBarrelComponent::UBarrelComponent()
@@ -12,11 +13,28 @@ UBarrelComponent::UBarrelComponent()
 
 void UBarrelComponent::Shoot(FVector Start, FVector Direction, AController* Controller)
 {
+	if (FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetComponentLocation());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UBarrelComponent::Shoot( ABaseWeapon::FireSound != nullptr )"));
+	}
+
+	if(FireParticle != nullptr)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(),FireParticle,GetComponentTransform(), true); 
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UBarrelComponent::Shoot( ABaseWeapon::FireParticle != nullptr )"));
+	}
+	
 	FVector ShootEnd = Start+Direction*FireRange;
 	FHitResult ShootResult;
 	if(GetWorld()->LineTraceSingleByChannel(ShootResult,Start,ShootEnd, ECC_Visibility))
 	{
-		GEngine->AddOnScreenDebugMessage(-1,2.0f,FColor::Green,"Shot");
 		ShootEnd = ShootResult.ImpactPoint;
 		AActor* HitActor = ShootResult.GetActor();
 		if(IsValid(HitActor))

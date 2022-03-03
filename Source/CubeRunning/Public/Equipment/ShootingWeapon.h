@@ -24,6 +24,8 @@ protected:
 	// the name of the socket to attach to Barrel
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="SocketName")
 	FName MuzzelSktName;
+
+	virtual void BeginPlay() override;
 	
 public:
 	AShootingWeapon();

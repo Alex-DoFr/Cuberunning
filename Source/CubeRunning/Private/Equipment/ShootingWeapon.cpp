@@ -4,6 +4,14 @@
 #include "Equipment/ShootingWeapon.h"
 #include "Character/CubeRunningCharacter.h"
 
+void AShootingWeapon::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Barrel->SetFireSound(FireSound);
+	Barrel->SetFireParticle(FireParticle);
+}
+
 AShootingWeapon::AShootingWeapon()
 {
 	Barrel = CreateDefaultSubobject<UBarrelComponent>(TEXT("BarrelCpmponent"));
@@ -19,17 +27,20 @@ void AShootingWeapon::Use()
 		return;
 	}
 	
-	if(CheckCanUse())
+	if(!CheckCanUse())
 	{
-		AController* Controller = CachedCharacterOwner->GetController();
-		FVector ShootStatr;
-		FRotator ShootRotation;
-		FVector ShootDirecrion;
-
-		Controller->GetPlayerViewPoint(ShootStatr,ShootRotation);
-
-		ShootDirecrion = ShootRotation.RotateVector(FVector::ForwardVector);
-	
-		Barrel->Shoot(ShootStatr,ShootDirecrion,Controller);
+		return;
 	}
+
+	SetUseDelay();
+	AController* Controller = CachedCharacterOwner->GetController();
+	FVector ShootStatr;
+	FRotator ShootRotation;
+	FVector ShootDirecrion;
+
+	Controller->GetPlayerViewPoint(ShootStatr,ShootRotation);
+
+	ShootDirecrion = ShootRotation.RotateVector(FVector::ForwardVector);
+	
+	Barrel->Shoot(ShootStatr,ShootDirecrion,Controller);
 }

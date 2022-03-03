@@ -25,6 +25,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="SocketName")
 	FName AttachCktName;
 
+	// AnimMontage played by the owner when attacking with this weapon
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="VisualEffects")
+	UAnimMontage* UseAnimMontage;
+
+	// Sound played by the owner when attacking with this weapon
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="VisualEffects")
+	USoundBase* FireSound;
+
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="VisualEffects")
+	UParticleSystem* FireParticle;
+	
 	// Weak reference to the gun owner
 	TWeakObjectPtr<class ACubeRunningCharacter> CachedCharacterOwner;
 	
@@ -36,9 +47,9 @@ protected:
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	// If this weapon can be used return true and starts a timer to delay the use of the weapon
-	bool CheckCanUse();
+
+	// Does not allow the use of weapons for the time specified in DelayedReuse
+	void SetUseDelay();
 	
 	// A function for the DelayedReuseTimerHandle.
 	UFUNCTION()
@@ -46,6 +57,9 @@ protected:
 	
 public:	
 	ABaseWeapon();
+
+	// Returns information about whether a weapon can be used
+	bool CheckCanUse();
 
 	// Virtual function for overloading in descendant classes
 	virtual void Use();

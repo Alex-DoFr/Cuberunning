@@ -17,6 +17,9 @@ protected:
 	float FireRange = 999999.0f;
 	float DamageAmount = 1.0f;
 
+	USoundBase* FireSound;
+
+	UParticleSystem* FireParticle;
 public:	
 	UBarrelComponent();
 
@@ -24,4 +27,8 @@ public:
 	void Shoot(FVector Start, FVector Direction, AController* Controller);
 
 	void SetDamageAmount(float Damage){DamageAmount = Damage;}
+
+	void SetFireSound(USoundBase* Sound){FireSound = Sound;}
+
+	void SetFireParticle(UParticleSystem* Particle){FireParticle = Particle;}
 };
