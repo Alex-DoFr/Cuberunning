@@ -8,6 +8,7 @@
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
+#include "Blueprint/UserWidget.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -60,6 +61,18 @@ void ACubeRunningCharacter::BeginPlay()
 		TimelineCallBack.BindUFunction(this,FName("UpdateCameraTilt"));
 		CameraTilTimeline.AddInterpFloat(CameraTiltCurve, TimelineCallBack);
 	}
+
+	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+
+	// Create UI
+	if(IsValid(GameplayUWClass))
+	{
+		GameplayUW = CreateWidget<UGameplayUW>(GetWorld(),GameplayUWClass);
+		if(GameplayUW != nullptr)
+		{
+			GameplayUW->AddToViewport();
+		}
+	}
 }
 
 	
@@ -74,6 +87,9 @@ void ACubeRunningCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// Bind jump events
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ACubeRunningCharacter::StartSprinting);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ACubeRunningCharacter::StopSprinting);
 
 	// Bind fire event
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACubeRunningCharacter::UseWeapon);
@@ -174,7 +190,7 @@ void ACubeRunningCharacter::StopWallRun()
 	GetCharacterMovement()->SetPlaneConstraintNormal(FVector::ZeroVector);
 }
 
-void ACubeRunningCharacter::UpdatrWallRun()
+void ACubeRunningCharacter::UpdateWallRun()
 {
 	if(!AreRequiredKeysDown(CurrentWalRunSide))
 	{
@@ -213,6 +229,44 @@ void ACubeRunningCharacter::UpdatrWallRun()
 	}
 }
 
+void ACubeRunningCharacter::StartSprinting()
+{
+	if(IsSprinting == true)
+	{
+		return;
+	}
+
+	IsSprinting = true;
+	GetCharacterMovement()->MaxWalkSpeed = MaxSprintSpeed;
+}
+
+void ACubeRunningCharacter::StopSprinting()
+{
+	if(IsSprinting == false)
+	{
+		return;
+	}
+
+	IsSprinting = false;
+
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+}
+
+void ACubeRunningCharacter::UpdateSprinting()
+{
+	if(RightAxis != 0.f)
+	{
+		StopSprinting();
+		return;
+	}
+
+	if(ForwardAxis < 0.5f)
+	{
+		StopSprinting();
+		return;
+	}
+}
+
 void ACubeRunningCharacter::UpdateCameraTilt(float Value)
 {
 	FRotator CurrentControlRotation = GetControlRotation();
@@ -246,11 +300,18 @@ void ACubeRunningCharacter::Jump()
 void ACubeRunningCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
 	if(bIsWallRoning)
 	{
-		UpdatrWallRun();
+		UpdateWallRun();
 	}
+	
 	CameraTilTimeline.TickTimeline(DeltaSeconds);
+
+	if(IsSprinting)
+	{
+		UpdateSprinting();
+	}
 }
 
 void ACubeRunningCharacter::UseWeapon()

@@ -7,6 +7,7 @@
 #include "Components/CharacterHealthComponent.h"
 #include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
+#include "HUD/GameplayUW.h"
 #include "CubeRunningCharacter.generated.h"
 
 class USkeletalMeshComponent;
@@ -71,10 +72,21 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Sprint")
+	float MaxSprintSpeed = 1000.f;
+
+	float WalkSpeed;
+
+	bool IsSprinting = false;
+	
 	/** Whether to use motion controller location for aiming. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint8 bUsingMotionControllers : 1;
 
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="UI")
+	TSubclassOf<UGameplayUW> GameplayUWClass;
+
+	UGameplayUW* GameplayUW;
 protected:
 	virtual void BeginPlay();
 	
@@ -117,7 +129,13 @@ protected:
 	void StopWallRun();
 
 	// Checks every frame whether the character is running on the wall
-	void UpdatrWallRun();
+	void UpdateWallRun();
+
+	void StartSprinting();
+
+	void StopSprinting();
+
+	void UpdateSprinting();
 	
 	FORCEINLINE void BeginCameraTilt() {CameraTilTimeline.Play();}
 	
