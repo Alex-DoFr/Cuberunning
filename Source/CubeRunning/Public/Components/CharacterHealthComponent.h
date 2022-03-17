@@ -19,13 +19,7 @@ protected:
 
 	bool bIsDeath = false;
 
-	// Location recorded at the start of the game
-	FVector SpawnLocation;
-
-	// Rotation recorded at the start of the game
-	FRotator SpawnRotation;
-
-	FTimerHandle RespawnTimerHandle;
+	class ACubeRunningGameMode* CubeRunningGameMode;
 
 	// Screen fade-out time at death
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Effects | VisualEffects")
@@ -34,19 +28,21 @@ protected:
 	// Time to restore the color of the camera when it is restored
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Effects | VisualEffects")
 	float TimeCameraUnfade; 
+
+	FTimerHandle DeathDelayTimerHandle;
 	
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void OnTakeAnyDamage(AActor* DamagedActor, float Damage, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
-
-	void Death();
-
+	
 	void Respawn();
 
-public:
-	UCharacterHealthComponent();
+	void NotifyGameMpdOfDeath();
 	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+public:
+	void Death();
+	
+	UCharacterHealthComponent();
 };

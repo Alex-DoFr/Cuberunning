@@ -47,7 +47,7 @@ void ABaseWeapon::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Owner is not Valid"));
+		UE_LOG(LogTemp, Warning, TEXT("ABaseWeapon::BeginPlay Owner is not Valid"));
 	}
 }
 

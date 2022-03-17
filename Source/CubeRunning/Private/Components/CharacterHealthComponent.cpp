@@ -3,7 +3,9 @@
 
 #include "Components/CharacterHealthComponent.h"
 #include "Character/CubeRunningCharacter.h"
+#include "Core/CubeRunningGameMode.h"
 #include "GameFramework/GameSession.h"
+#include "Kismet/GameplayStatics.h"
 
 
 UCharacterHealthComponent::UCharacterHealthComponent()
@@ -18,8 +20,11 @@ void UCharacterHealthComponent::BeginPlay()
 	checkf(GetOwner()->IsA<ACubeRunningCharacter>(),TEXT("UCharacterHealthComponent::BeginPlay() can de used only with CubeRunningCharacter"));
 	CachedCharacterOwner = StaticCast<ACubeRunningCharacter*>(GetOwner());
 	CachedCharacterOwner->OnTakeAnyDamage.AddDynamic(this,&UCharacterHealthComponent::OnTakeAnyDamage);
-	SpawnLocation = CachedCharacterOwner->GetActorLocation();
-	SpawnRotation = CachedCharacterOwner->GetController()->GetControlRotation();
+	
+	CubeRunningGameMode = Cast< ACubeRunningGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	CubeRunningGameMode->GameСharacter = StaticCast<ACubeRunningCharacter*>(GetOwner());
+	
+	Respawn();
 }
 
 void UCharacterHealthComponent::OnTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -37,7 +42,7 @@ void UCharacterHealthComponent::Death()
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	CachedCharacterOwner->DisableInput(PlayerController);
 	PlayerController->PlayerCameraManager->StartCameraFade(0.0f,1.0f,TimeCameraFade,FLinearColor::Black,false, true);
-	GetWorld()->GetTimerManager().SetTimer(RespawnTimerHandle,this,&UCharacterHealthComponent::Respawn,3.0f);
+	GetWorld()->GetTimerManager().SetTimer(DeathDelayTimerHandle,this,&UCharacterHealthComponent::NotifyGameMpdOfDeath, TimeCameraFade);
 }
 
 void UCharacterHealthComponent::Respawn()
@@ -48,16 +53,14 @@ void UCharacterHealthComponent::Respawn()
 	}
 	bIsDeath = false;
 
-	CachedCharacterOwner->SetActorLocation(SpawnLocation);
-	CachedCharacterOwner->GetController()->SetControlRotation(SpawnRotation);
-	
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	CachedCharacterOwner->EnableInput(PlayerController);
 	PlayerController->PlayerCameraManager->StartCameraFade(1.0f,0.0f,TimeCameraUnfade,FLinearColor::Black,false, false);
 }
 
-void UCharacterHealthComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCharacterHealthComponent::NotifyGameMpdOfDeath()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	CubeRunningGameMode->GameСharacterDied();
 }
+
+
 

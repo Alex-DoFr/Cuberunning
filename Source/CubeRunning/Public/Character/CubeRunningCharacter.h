@@ -151,6 +151,8 @@ public:
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
+	UCharacterHealthComponent* GetHealthComponent() const { return HealthComponent; }
+
 	virtual void Jump() override;
 
 	virtual void Tick(float DeltaSeconds) override;

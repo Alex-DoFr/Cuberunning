@@ -1,14 +1,48 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Core/CubeRunningGameMode.h"
-#include "HUD/CubeRunningHUD.h"
 #include "Character/CubeRunningCharacter.h"
+#include "GameFramework/GameMode.h"
+#include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 
 ACubeRunningGameMode::ACubeRunningGameMode()
-	: Super()
+	: Super(){}
+
+void ACubeRunningGameMode::GameСharacterDied()
 {
-	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/Blueprints/FirstPersonCharacter"));
-	DefaultPawnClass = PlayerPawnClassFinder.Class;
+	GetWorldTimerManager().ClearTimer(UpdateLifetimeTimerHandle);
+	LevelReboot();
+}
+
+void ACubeRunningGameMode::LevelReboot()
+{
+	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+}
+
+void ACubeRunningGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	GetWorldTimerManager().SetTimer(UpdateLifetimeTimerHandle,this,&ACubeRunningGameMode::UpdateLifetime,1.f, true);
+}
+
+void ACubeRunningGameMode::UpdateLifetime()
+{
+	LifeTime--;
+	GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Green,FString::Printf(TEXT("LifeTime = %d"),LifeTime));
+	if(LifeTime <= 0)
+	{
+		LifeTime = 0;
+		GetWorldTimerManager().ClearTimer(UpdateLifetimeTimerHandle);
+		if(GameСharacter.IsValid())
+		{
+			GameСharacter->GetHealthComponent()->Death();
+		}
+		else
+		{
+			LevelReboot();
+		}
+	}
+	OnUpdateLifetime.Broadcast();
 }

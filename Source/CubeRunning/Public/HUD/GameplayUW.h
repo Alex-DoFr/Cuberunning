@@ -20,4 +20,12 @@ protected:
 	
 	UPROPERTY(meta=(BindWidget))
 	class UTextBlock* LifeTimeText;
+
+	class ACubeRunningGameMode* CubeRunningGameMode;
+
+	UFUNCTION()
+	void OnGetLifeTime();
+	
+public:
+	virtual void NativeConstruct() override;
 };
