@@ -11,7 +11,7 @@ UBarrelComponent::UBarrelComponent()
 	
 }
 
-void UBarrelComponent::Shoot(FVector Start, FVector Direction, AController* Controller)
+void UBarrelComponent::Shoot(FVector Start, FVector Direction, AController* Controller, AActor* IgnoreActor)
 {
 	if (FireSound != nullptr)
 	{
@@ -33,7 +33,9 @@ void UBarrelComponent::Shoot(FVector Start, FVector Direction, AController* Cont
 	
 	FVector ShootEnd = Start+Direction*FireRange;
 	FHitResult ShootResult;
-	if(GetWorld()->LineTraceSingleByChannel(ShootResult,Start,ShootEnd, ECC_Visibility))
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(IgnoreActor);
+	if(GetWorld()->LineTraceSingleByChannel(ShootResult,Start,ShootEnd, ECC_GameTraceChannel1, Params))
 	{
 		ShootEnd = ShootResult.ImpactPoint;
 		AActor* HitActor = ShootResult.GetActor();

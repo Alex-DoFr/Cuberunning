@@ -6,7 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "CubeRunningGameMode.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FUpdateLifetime);
+DECLARE_MULTICAST_DELEGATE_OneParam(FUpdateLifetime,int32);
 
 UCLASS(minimalapi)
 class ACubeRunningGameMode : public AGameModeBase
@@ -31,7 +31,8 @@ public:
 
 	int32 GetLifeTime(){return LifeTime;}
 
-	int32 AddLifeTime(int32 Added){LifeTime+=Added;}
+	// Increases the LifeTime by the passed value and returns a new LifeTime. If the passed value is incorrect, it returns -1
+	int32 AddLifeTime(int32 Added);
 	
 protected:
 	virtual void BeginPlay() override;

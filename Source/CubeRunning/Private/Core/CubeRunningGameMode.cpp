@@ -20,6 +20,18 @@ void ACubeRunningGameMode::LevelReboot()
 	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
 }
 
+int32 ACubeRunningGameMode::AddLifeTime(int32 Added)
+{
+	if(Added < 1)
+	{
+		return -1;
+	}
+
+	LifeTime+=Added;
+	OnUpdateLifetime.Broadcast(LifeTime);
+	return LifeTime;
+}
+
 void ACubeRunningGameMode::BeginPlay()
 {
 	Super::BeginPlay();
@@ -30,7 +42,7 @@ void ACubeRunningGameMode::BeginPlay()
 void ACubeRunningGameMode::UpdateLifetime()
 {
 	LifeTime--;
-	GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Green,FString::Printf(TEXT("LifeTime = %d"),LifeTime));
+	//GEngine->AddOnScreenDebugMessage(-1,1.f,FColor::Green,FString::Printf(TEXT("LifeTime = %d"),LifeTime));
 	if(LifeTime <= 0)
 	{
 		LifeTime = 0;
@@ -44,5 +56,5 @@ void ACubeRunningGameMode::UpdateLifetime()
 			LevelReboot();
 		}
 	}
-	OnUpdateLifetime.Broadcast();
+	OnUpdateLifetime.Broadcast(LifeTime);
 }

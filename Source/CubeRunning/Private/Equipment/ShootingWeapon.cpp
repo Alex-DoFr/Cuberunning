@@ -42,5 +42,5 @@ void AShootingWeapon::Use()
 
 	ShootDirecrion = ShootRotation.RotateVector(FVector::ForwardVector);
 	
-	Barrel->Shoot(ShootStatr,ShootDirecrion,Controller);
+	Barrel->Shoot(ShootStatr,ShootDirecrion,Controller,CachedCharacterOwner.Get());
 }

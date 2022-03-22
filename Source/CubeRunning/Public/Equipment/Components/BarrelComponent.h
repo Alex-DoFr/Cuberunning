@@ -24,7 +24,7 @@ public:
 	UBarrelComponent();
 
 	UFUNCTION()
-	void Shoot(FVector Start, FVector Direction, AController* Controller);
+	void Shoot(FVector Start, FVector Direction, AController* Controller, AActor* IgnoreActor);
 
 	void SetDamageAmount(float Damage){DamageAmount = Damage;}
 
